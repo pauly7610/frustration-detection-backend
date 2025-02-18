@@ -1,18 +1,21 @@
-import { Kafka, Producer, Consumer } from 'kafkajs';
+import { Kafka } from 'kafkajs';
 
 const kafka = new Kafka({
-  clientId: process.env.KAFKA_CLIENT_ID || 'frustration-detection-backend',
-  brokers: (process.env.KAFKA_BOOTSTRAP_SERVERS || 'localhost:9092').split(',')
+  clientId: 'frustration-detection',
+  brokers: [process.env.KAFKA_BROKER!],
+  ssl: true,
+  sasl: {
+    mechanism: 'plain',
+    username: process.env.KAFKA_USERNAME!,
+    password: process.env.KAFKA_PASSWORD!,
+  },
 });
 
-export const createProducer = async (): Promise<Producer> => {
-  const producer = kafka.producer();
-  await producer.connect();
-  return producer;
-};
+export const producer = kafka.producer();
+export const consumer = kafka.consumer({ groupId: 'frustration-group' });
 
-export const createConsumer = async (groupId: string): Promise<Consumer> => {
-  const consumer = kafka.consumer({ groupId });
+export const connectKafka = async () => {
+  await producer.connect();
   await consumer.connect();
-  return consumer;
+  console.log('Kafka connected');
 }; 
